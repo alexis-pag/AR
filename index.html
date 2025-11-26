@@ -5,7 +5,6 @@
   <title>Speaker-VR AR</title>
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
 </head>
 <body>
   <a-scene mindar-image="imageTargetSrc: ./targets-2.mind;"
@@ -19,8 +18,8 @@
     <!-- Target AR -->
     <a-entity mindar-image-target="targetIndex: 0">
 
-      <!-- Parent invisible par défaut, réduit le jitter -->
-      <a-entity id="enceinte-parent" position="0 0 0" visible="false" aframe-extras="look-at: 0 0 0; damping: 0.05">
+      <!-- Parent invisible par défaut pour réduire le jitter -->
+      <a-entity id="enceinte-parent" position="0 0 0" visible="false">
 
         <!-- Objet enceinte -->
         <a-entity id="enceinte" scale="0.01 0.01 0.01" rotation="0 0 0">
@@ -36,155 +35,81 @@
           <a-entity id="partie-avant" obj-model="obj: ./assets/partie-avant.obj" position="-107.78422 29.11701 -19.38373" rotation="-90 90 0" material="color: #ff0000"></a-entity>
           <a-entity id="bas" obj-model="obj: ./assets/bas.obj" position="-59.65366 -18.19764 -19.1577" rotation="0 90 0" material="side: double; color: #ff80c0"></a-entity>
 
-          <!-- Conteneur des particules -->
-          <a-entity id="particles-container" position="-60 20 -20"></a-entity>
-
         </a-entity>
       </a-entity>
     </a-entity>
 
-    <!-- Lumières -->
-    <a-entity light="type: ambient; intensity: 0.7; color: #ffffff"></a-entity>
-    <a-entity light="type: directional; intensity: 0.8; castShadow: true" position="3 5 2"></a-entity>
-    <a-entity light="type: point; intensity: 0.5; color: #ffffff" position="0 2 0"></a-entity>
-
-    <!-- Sky (couleur de fond si la vidéo ne couvre pas tout) -->
-
-
   </a-scene>
 
   <script>
-    // Texte regarde toujours la caméra
-    AFRAME.registerComponent('look-at-camera', {
-      tick: function() {
-        const camera = document.querySelector('[camera]');
-        if(camera) this.el.object3D.lookAt(camera.object3D.position);
-      }
-    });
+    document.addEventListener('DOMContentLoaded', () => {
 
-    document.addEventListener('DOMContentLoaded', function() {
       const parent = document.querySelector('#enceinte-parent');
-      const enceinte = document.querySelector('#enceinte');
-      const particlesContainer = document.querySelector('#particles-container');
 
       const components = [
-        {id:'back', name:'Face arrière', offset:{x:0,y:0,z:-200}},
-        {id:'Left', name:'Côté gauche', offset:{x:-180,y:60,z:0}},
-        {id:'Right', name:'Côté droit', offset:{x:180,y:60,z:0}},
-        {id:'Batteries', name:'Compartiment batteries', offset:{x:120,y:-70,z:80}},
-        {id:'Open', name:'Bouton marche/arrêt', offset:{x:-90,y:40,z:-130}},
-        {id:'Speaker', name:'Haut-parleur principal', offset:{x:-80,y:-30,z:200}},
-        {id:'Led', name:'LED indicateur', offset:{x:0,y:180,z:0}},
-        {id:'partie-avant', name:'Face avant', offset:{x:80,y:30,z:240}},
-        {id:'bas', name:'Base de support', offset:{x:0,y:-130,z:0}}
+        {id:'back', offset:{x:0,y:0,z:-20}},
+        {id:'Left', offset:{x:-15,y:10,z:0}},
+        {id:'Right', offset:{x:15,y:10,z:0}},
+        {id:'Batteries', offset:{x:10,y:-10,z:5}},
+        {id:'Open', offset:{x:-10,y:5,z:-10}},
+        {id:'Speaker', offset:{x:-15,y:-5,z:15}},
+        {id:'Led', offset:{x:0,y:15,z:0}},
+        {id:'partie-avant', offset:{x:10,y:5,z:15}},
+        {id:'bas', offset:{x:0,y:-15,z:0}}
       ];
 
-      let isExploded=false;
-      const originalData={};
-      const labels={};
-      const particles=[];
-      let explosionSphere=null;
+      const originalData = {};
 
-      function createParticles(){
-        const colors=['#ffffff','#ffaa00','#ff6600','#ff0000'];
-        explosionSphere=document.createElement('a-sphere');
-        explosionSphere.setAttribute('radius',10);
-        explosionSphere.setAttribute('color','#ffaa00');
-        explosionSphere.setAttribute('material','opacity:0; emissive:#ff6600; emissiveIntensity:2; transparent:true');
-        explosionSphere.setAttribute('visible',false);
-        particlesContainer.appendChild(explosionSphere);
-
-        for(let i=0;i<120;i++){
-          const particle=document.createElement('a-box');
-          particle.setAttribute('width',2); particle.setAttribute('height',2); particle.setAttribute('depth',2);
-          particle.setAttribute('color',colors[Math.floor(Math.random()*colors.length)]);
-          particle.setAttribute('material','opacity:0; transparent:true; emissive:'+colors[Math.floor(Math.random()*colors.length)]+'; emissiveIntensity:0.5');
-          particle.setAttribute('visible',false);
-          particlesContainer.appendChild(particle);
-          particles.push(particle);
+      // Stocker les positions d'origine
+      components.forEach(comp => {
+        const el = document.getElementById(comp.id);
+        if(el){
+          const pos = el.getAttribute('position');
+          originalData[comp.id] = {x: pos.x, y: pos.y, z: pos.z};
         }
-      }
+      });
 
-      function initComponents(){
-        createParticles();
-        components.forEach(comp=>{
-          const el=document.getElementById(comp.id);
+      // Explosion
+      function explode() {
+        components.forEach((comp, index) => {
+          const el = document.getElementById(comp.id);
           if(el){
-            const pos=el.getAttribute('position');
-            const rot=el.getAttribute('rotation');
-            originalData[comp.id]={position:{x:pos.x,y:pos.y,z:pos.z}, rotation:{x:rot.x,y:rot.y,z:rot.z}};
-            const label=document.createElement('a-entity');
-            label.setAttribute('position','0 35 0'); label.setAttribute('visible',false);
-            const text=document.createElement('a-text');
-            text.setAttribute('value',comp.name); text.setAttribute('align','center'); text.setAttribute('color','#ffffff');
-            text.setAttribute('width',35); text.setAttribute('material','opacity:0; transparent:true'); text.setAttribute('look-at-camera','');
-            label.appendChild(text); el.appendChild(label);
-            labels[comp.id]={container:label,text:text};
+            const target = {
+              x: originalData[comp.id].x + comp.offset.x,
+              y: originalData[comp.id].y + comp.offset.y,
+              z: originalData[comp.id].z + comp.offset.z
+            };
+
+            el.setAttribute('animation__explode', {
+              property: 'position',
+              to: `${target.x} ${target.y} ${target.z}`,
+              dur: 1500,
+              easing: 'easeOutCubic'
+            });
+
+            // Retour à la position initiale après 2s
+            setTimeout(() => {
+              el.setAttribute('animation__return', {
+                property: 'position',
+                to: `${originalData[comp.id].x} ${originalData[comp.id].y} ${originalData[comp.id].z}`,
+                dur: 1500,
+                easing: 'easeInCubic'
+              });
+            }, 2000);
           }
         });
       }
 
-      // Apparition AR et rotation
-      const targetEntity=document.querySelector('[mindar-image-target]');
-      targetEntity.addEventListener('targetFound', ()=>{
-        parent.setAttribute('visible',true);
-        enceinte.setAttribute('animation',{
-          property:'rotation',
-          to:'0 360 0',
-          loop:true,
-          dur:5000,
-          easing:'linear'
-        });
-        startCycle();
+      // Détecter cible AR
+      const targetEntity = document.querySelector('[mindar-image-target]');
+      targetEntity.addEventListener('targetFound', () => {
+        parent.setAttribute('visible', true);
+        explode();
       });
 
-      targetEntity.addEventListener('targetLost', ()=>{
-        parent.setAttribute('visible',false);
-        enceinte.removeAttribute('animation');
+      targetEntity.addEventListener('targetLost', () => {
+        parent.setAttribute('visible', false);
       });
-
-      function emitParticles(){
-        if(!explosionSphere) return;
-        explosionSphere.setAttribute('visible',true);
-        explosionSphere.setAttribute('material','opacity:1; emissive:#ff6600; emissiveIntensity:3; transparent:true');
-        explosionSphere.setAttribute('animation__expand',{property:'radius', from:10, to:100, dur:600, easing:'easeOutQuad'});
-        explosionSphere.setAttribute('animation__fade',{property:'material.opacity', from:1, to:0, dur:600, easing:'easeOutQuad'});
-        setTimeout(()=>{explosionSphere.setAttribute('visible',false);},600);
-
-        particles.forEach((particle,i)=>{
-          setTimeout(()=>{
-            const angle=(i/particles.length)*Math.PI*2;
-            const elevation=(Math.random()-0.5)*Math.PI*0.8;
-            const radius=80+Math.random()*60;
-            particle.setAttribute('visible',true); particle.setAttribute('position','0 0 0');
-            particle.setAttribute('material','opacity:1; transparent:true');
-            const targetX=Math.cos(angle)*Math.cos(elevation)*radius;
-            const targetY=Math.sin(elevation)*radius;
-            const targetZ=Math.sin(angle)*Math.cos(elevation)*radius;
-            particle.setAttribute('animation__move',{property:'position', to:`${targetX} ${targetY} ${targetZ}`, dur:1800, easing:'easeOutCubic'});
-            particle.setAttribute('animation__spin',{property:'rotation', to:`${Math.random()*360} ${Math.random()*360} ${Math.random()*360}`, dur:1800, easing:'linear'});
-            particle.setAttribute('animation__fade',{property:'material.opacity', from:1, to:0, dur:1800, delay:200, easing:'easeInQuad'});
-            setTimeout(()=>{particle.setAttribute('visible',false);},2000);
-          }, i*5);
-        });
-      }
-
-      function explode(){
-        isExploded=true;
-        emitParticles();
-      }
-
-      function reassemble(){ isExploded=false; }
-
-      function startCycle(){
-        if(!isExploded){
-          explode();
-          setTimeout(()=>{ reassemble(); setTimeout(()=>startCycle(),5000); },5000);
-        }
-      }
-
-      const scene=document.querySelector('a-scene');
-      if(scene.hasLoaded){ initComponents(); }else{ scene.addEventListener('loaded', initComponents); }
 
     });
   </script>
