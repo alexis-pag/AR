@@ -11,7 +11,7 @@
       padding: 0;
       height: 100%;
       overflow: hidden;
-      background-color: black; /* Supprime le carré blanc */
+      background-color: black;
     }
     a-scene {
       width: 100%;
@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <a-scene mindar-image="imageTargetSrc: ./targets-2.mind;" 
+  <a-scene mindar-image="imageTargetSrc: ./targets-2.mind; smooth: true; smoothCount: 10;" 
            embedded 
            color-space="sRGB" 
            vr-mode-ui="enabled: false" 
@@ -33,10 +33,10 @@
     <!-- Cible AR -->
     <a-entity mindar-image-target="targetIndex: 0">
 
-      <!-- Parent invisible par défaut -->
-      <a-entity id="enceinte-parent" position="0 0 0" visible="false">
+      <!-- Parent invisible par défaut, avec stabilisation -->
+      <a-entity id="enceinte-parent" position="0 0 0" visible="false" stabilize>
 
-        <!-- Objet enceinte avec positions exactes -->
+        <!-- Objet enceinte -->
         <a-entity id="enceinte" scale="0.01 0.01 0.01">
           <a-entity id="back" obj-model="obj: ./assets/Back.obj" position="-20.15299 4.74877 -54.67917" rotation="0 90 0" scale="1 1 1" material="color: #ffff80"></a-entity>
           <a-entity id="Left" obj-model="obj: ./assets/Left.obj" position="-31.10108 62.18591 -69.24553" rotation="0 0 90" scale="1 1 1" material="color: #8080c0"></a-entity>
@@ -54,6 +54,18 @@
   </a-scene>
 
   <script>
+    // Composant pour lisser les mouvements
+    AFRAME.registerComponent('stabilize', {
+      init: function () {
+        this.previousPos = new THREE.Vector3();
+      },
+      tick: function () {
+        const obj = this.el.object3D;
+        this.previousPos.lerp(obj.position, 0.1); // 0.1 = facteur de lissage
+        obj.position.copy(this.previousPos);
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
 
       const parent = document.querySelector('#enceinte-parent');
@@ -81,9 +93,9 @@
         }
       });
 
-      // Fonction d'explosion
+      // Explosion fluide avec léger décalage et easing doux
       function explode() {
-        components.forEach((comp) => {
+        components.forEach((comp, index) => {
           const el = document.getElementById(comp.id);
           if(el){
             const target = {
@@ -96,18 +108,18 @@
               property: 'position',
               to: `${target.x} ${target.y} ${target.z}`,
               dur: 1500,
-              easing: 'easeOutCubic'
+              easing: 'easeOutQuad',
+              delay: index * 50 // décalage léger pour fluidité
             });
 
-            // Retour à position initiale après 2s
             setTimeout(() => {
               el.setAttribute('animation__return', {
                 property: 'position',
                 to: `${originalData[comp.id].x} ${originalData[comp.id].y} ${originalData[comp.id].z}`,
                 dur: 1500,
-                easing: 'easeInCubic'
+                easing: 'easeInQuad'
               });
-            }, 2000);
+            }, 2000 + index * 50);
           }
         });
       }
@@ -116,7 +128,7 @@
       const targetEntity = document.querySelector('[mindar-image-target]');
       targetEntity.addEventListener('targetFound', () => {
         parent.setAttribute('visible', true);
-        explode();
+        setTimeout(() => explode(), 100); // léger délai pour stabiliser
       });
 
       targetEntity.addEventListener('targetLost', () => {
