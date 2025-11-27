@@ -122,44 +122,66 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
   function explode(callback){
+    let completed = 0;
     components.forEach(comp=>{
-      const el=document.getElementById(comp.id);
+      const el = document.getElementById(comp.id);
       if(el){
         el.removeAttribute('animation__pos');
         el.removeAttribute('animation__rot');
-        const orig=originalData[comp.id].position;
-        const origRot=originalData[comp.id].rotation;
+        const orig = originalData[comp.id].position;
+        const origRot = originalData[comp.id].rotation;
         el.object3D.position.set(orig.x,orig.y,orig.z);
-        el.object3D.rotation.set(THREE.MathUtils.degToRad(origRot.x),THREE.MathUtils.degToRad(origRot.y),THREE.MathUtils.degToRad(origRot.z));
-        const targetPos={x:orig.x+comp.offset.x,y:orig.y+comp.offset.y,z:orig.z+comp.offset.z};
-        const targetRot={x:origRot.x+(Math.random()-0.5)*60,y:origRot.y+(Math.random()-0.5)*60,z:origRot.z+(Math.random()-0.5)*60};
+        el.object3D.rotation.set(THREE.MathUtils.degToRad(origRot.x),
+                                 THREE.MathUtils.degToRad(origRot.y),
+                                 THREE.MathUtils.degToRad(origRot.z));
+        const targetPos = {x:orig.x+comp.offset.x, y:orig.y+comp.offset.y, z:orig.z+comp.offset.z};
+        const targetRot = {x:origRot.x+(Math.random()-0.5)*60,
+                           y:origRot.y+(Math.random()-0.5)*60,
+                           z:origRot.z+(Math.random()-0.5)*60};
+
         el.setAttribute('animation__pos',{property:'position',to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`,dur:1800,easing:'easeOutCubic'});
         el.setAttribute('animation__rot',{property:'rotation',to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`,dur:1800,easing:'easeOutCubic'});
+
+        el.addEventListener('animationcomplete', function onComplete(evt){
+          if(evt.detail.name === 'animation__pos'){
+            completed++;
+            el.removeEventListener('animationcomplete', onComplete);
+            if(completed === components.length && callback) callback();
+          }
+        });
       }
     });
     emitParticles();
-    if(callback) setTimeout(callback,1800);
   }
 
   function reassemble(callback){
+    let completed = 0;
     components.forEach(comp=>{
-      const el=document.getElementById(comp.id);
+      const el = document.getElementById(comp.id);
       if(el){
         el.removeAttribute('animation__pos');
         el.removeAttribute('animation__rot');
-        const orig=originalData[comp.id].position;
-        const origRot=originalData[comp.id].rotation;
+        const orig = originalData[comp.id].position;
+        const origRot = originalData[comp.id].rotation;
+
         el.setAttribute('animation__return',{property:'position',to:`${orig.x} ${orig.y} ${orig.z}`,dur:1800,easing:'easeInOutCubic'});
         el.setAttribute('animation__rot_return',{property:'rotation',to:`${origRot.x} ${origRot.y} ${origRot.z}`,dur:1800,easing:'easeInOutCubic'});
+
+        el.addEventListener('animationcomplete', function onComplete(evt){
+          if(evt.detail.name === 'animation__return'){
+            completed++;
+            el.removeEventListener('animationcomplete', onComplete);
+            if(completed === components.length && callback) callback();
+          }
+        });
       }
     });
-    if(callback) setTimeout(callback,1800);
   }
 
   function loop(){
     if(!looping) return;
     explode(()=>{
-      reassemble(loop); // se rappelle elle-même → boucle infinie
+      reassemble(loop); // se rappelle → boucle infinie
     });
   }
 
@@ -169,12 +191,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     initComponents();
     createParticles();
     looping = true;
-    loop(); // démarre la boucle infinie
+    loop(); // démarrage de la boucle infinie
   });
 
   targetEntity.addEventListener('targetLost',()=>{
     parent.setAttribute('visible',false);
-    looping = false; // arrête la boucle si le target disparaît
+    looping = false; // stoppe la boucle
   });
 });
 </script>
