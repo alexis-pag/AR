@@ -145,18 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if(el){
         setTimeout(()=>{
           const orig=originalData[comp.id].position;
-          const targetPos={x:orig.x+comp.offset.x,y:orig.y+comp.offset.y,z:orig.z+comp.offset.z};
           const origRot=originalData[comp.id].rotation;
-          const targetRot={x:origRot.x+(Math.random()-0.5)*120,y:origRot.y+(Math.random()-0.5)*120,z:origRot.z+(Math.random()-0.5)*120};
-          el.setAttribute('animation__pos',{property:'position',to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`,dur:1800,easing:'easeOutCubic'});
-          el.setAttribute('animation__rot',{property:'rotation',to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`,dur:1800,easing:'easeOutCubic'});
+          const targetPos={x:orig.x+comp.offset.x, y:orig.y+comp.offset.y, z:orig.z+comp.offset.z};
+          const targetRot={x:origRot.x+(Math.random()-0.5)*60, y:origRot.y+(Math.random()-0.5)*60, z:origRot.z+(Math.random()-0.5)*60};
+          el.setAttribute('animation__pos',{property:'position', to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`, dur:1800, easing:'easeOutCubic'});
+          el.setAttribute('animation__rot',{property:'rotation', to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`, dur:1800, easing:'easeOutCubic'});
           if(label){
             setTimeout(()=>{
               label.container.setAttribute('visible',true);
               label.text.setAttribute('animation__show',{property:'material.opacity',from:0,to:1,dur:600});
             },1000);
           }
-        },index*100);
+        }, index*100);
       }
     });
   }
@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(()=>{
           const orig=originalData[comp.id].position;
           const origRot=originalData[comp.id].rotation;
-          el.setAttribute('animation__return',{property:'position',to:`${orig.x} ${orig.y} ${orig.z}`,dur:1800,easing:'easeInOutCubic'});
-          el.setAttribute('animation__rot_return',{property:'rotation',to:`${origRot.x} ${origRot.y} ${origRot.z}`,dur:1800,easing:'easeInOutCubic'});
+          el.setAttribute('animation__return',{property:'position', to:`${orig.x} ${orig.y} ${orig.z}`, dur:1800, easing:'easeInOutCubic'});
+          el.setAttribute('animation__rot_return',{property:'rotation', to:`${origRot.x} ${origRot.y} ${origRot.z}`, dur:1800, easing:'easeInOutCubic'});
         },index*100);
       }
     });
