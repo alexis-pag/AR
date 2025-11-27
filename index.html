@@ -1,174 +1,237 @@
-<html>
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-aframe.prod.js"></script>
-
-    <style>
-      body, html { margin: 0; overflow: hidden; }
-    </style>
-  </head>
-
-  <body>
-    <script>
-      AFRAME.registerComponent("explosion-loop", {
-        init() {
-
-          const el = this.el;
-
-          const flash = el.querySelector("#flash");
-          const shockwave = el.querySelector("#shockwave");
-          const smoke = el.querySelector("#smoke");
-          const debris = el.querySelector("#debris");
-
-          const camera = document.querySelector("[camera]");
-
-          const loopExplosion = () => {
-
-            /* RESET ANIMATION */
-            flash.setAttribute("visible", false);
-            shockwave.setAttribute("visible", false);
-            smoke.setAttribute("visible", false);
-            debris.setAttribute("visible", false);
-
-            flash.setAttribute("scale", "0 0 0");
-            shockwave.setAttribute("scale", "0.1 0.1 0.1");
-            smoke.setAttribute("scale", "0.1 0.1 0.1");
-
-            /* CAMERA SHAKE */
-            camera.setAttribute("animation__shake", {
-              property: "position",
-              from: "0 0 0",
-              to: "0 0.02 0",
-              dir: "alternate",
-              dur: 80,
-              easing: "easeInOutQuad",
-              loop: 6
-            });
-
-            /* FLASH */
-            setTimeout(() => {
-              flash.setAttribute("visible", true);
-              flash.setAttribute("animation__flash", {
-                property: "scale",
-                from: "0 0 0",
-                to: "2.2 2.2 2.2",
-                dur: 120,
-                easing: "easeOutQuad"
-              });
-              flash.setAttribute("animation__fade", {
-                property: "material.opacity",
-                from: 1,
-                to: 0,
-                dur: 220,
-                easing: "easeOutQuad"
-              });
-            }, 50);
-
-            /* SHOCKWAVE AU SOL */
-            setTimeout(() => {
-              shockwave.setAttribute("visible", true);
-              shockwave.setAttribute("animation__expand", {
-                property: "scale",
-                from: "0.1 0.1 0.1",
-                to: "3.5 3.5 3.5",
-                dur: 350,
-                easing: "easeOutCubic"
-              });
-              shockwave.setAttribute("animation__fade", {
-                property: "material.opacity",
-                from: 0.8,
-                to: 0,
-                dur: 350
-              });
-            }, 120);
-
-            /* FUMÉE */
-            setTimeout(() => {
-              smoke.setAttribute("visible", true);
-              smoke.setAttribute("animation__grow", {
-                property: "scale",
-                from: "0.1 0.1 0.1",
-                to: "2 2 2",
-                dur: 1200,
-                easing: "easeOutQuad"
-              });
-              smoke.setAttribute("animation__fade", {
-                property: "material.opacity",
-                from: 0.8,
-                to: 0.1,
-                dur: 1500
-              });
-            }, 200);
-
-            /* DEBRIS */
-            setTimeout(() => {
-              debris.setAttribute("visible", true);
-              debris.setAttribute("animation__up", {
-                property: "position",
-                from: "0 0 0",
-                to: "0 0.6 -0.3",
-                dur: 400,
-                easing: "easeOutCubic"
-              });
-              debris.setAttribute("animation__fall", {
-                property: "position",
-                from: "0 0.6 -0.3",
-                to: "0 -0.1 -0.3",
-                dur: 600,
-                delay: 350,
-                easing: "easeInQuad"
-              });
-            }, 120);
-
-            /* RELANCE DE LA BOUCLE */
-            setTimeout(loopExplosion, 3000);
-          };
-
-          loopExplosion();
-        }
-      });
-    </script>
-
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" embedded>
-
-      <a-assets>
-        <img id="flashTex" src="https://i.imgur.com/9a3M4QF.png">
-        <img id="smokeTex" src="https://i.imgur.com/yZ6kSqr.png">
-        <img id="shockTex" src="https://i.imgur.com/JmQkduF.png">
-      </a-assets>
-
-      <a-entity mindar-image-target="targetIndex: 0" explosion-loop>
-
-        <!-- FLASH -->
-        <a-plane id="flash" visible="false"
-                 material="src: #flashTex; transparent: true; opacity: 1"
-                 position="0 0 0" rotation="-90 0 0" scale="0 0 0">
-        </a-plane>
-
-        <!-- SHOCKWAVE -->
-        <a-ring id="shockwave" visible="false"
-                material="src: #shockTex; transparent: true; opacity: 0.8"
-                radius-inner="0.01" radius-outer="0.5"
-                rotation="-90 0 0" scale="0.1 0.1 0.1">
-        </a-ring>
-
-        <!-- FUMÉE -->
-        <a-plane id="smoke" visible="false"
-                 material="src: #smokeTex; transparent: true; opacity: 0.8"
-                 position="0 0 0" rotation="-90 0 0" scale="0.1 0.1 0.1">
-        </a-plane>
-
-        <!-- DEBRIS 3D -->
-        <a-sphere id="debris" visible="false"
-                  radius="0.06"
-                  color="#222"
-                  position="0 0 0">
-        </a-sphere>
-
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Speaker-VR AR - MindAR + Explosion</title>
+<!-- 1️⃣ Charger A-Frame en premier -->
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+<!-- 2️⃣ Charger MindAR -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-aframe.prod.js"></script>
+<style>
+html, body { margin:0; padding:0; height:100%; overflow:hidden; }
+a-scene { width:100%; height:100%; display:block; }
+</style>
+</head>
+<body>
+<a-scene mindar-image="imageTargetSrc: ./targets-2.mind; smooth: true; smoothCount: 10;" embedded color-space="sRGB" vr-mode-ui="enabled: false">
+  <a-camera id="camera" mindar-image-camera></a-camera>
+  <a-entity mindar-image-target="targetIndex: 0">
+    <a-entity id="enceinte-parent" position="0 0 0" visible="false">
+      <a-entity id="enceinte" scale="0.01 0.01 0.01">
+        <a-entity id="back" obj-model="obj: ./assets/Back.obj" position="-20 5 -55" rotation="0 90 0" material="color:#ffff80"></a-entity>
+        <a-entity id="Left" obj-model="obj: ./assets/Left.obj" position="-31 62 -69" rotation="0 0 90" material="color:#8080c0"></a-entity>
+        <a-entity id="Right" obj-model="obj: ./assets/Right.obj" position="-90 22 22" rotation="0 0 -90" material="color:#8000ff"></a-entity>
+        <a-entity id="Batteries" obj-model="obj: ./assets/Batteries.obj" position="-79 36 10" rotation="-90 -88 0" material="color:#80ffff"></a-entity>
+        <a-entity id="Open" obj-model="obj: ./assets/Open.obj" position="-44 19 -44" rotation="0 90 0" material="color:#ffff00"></a-entity>
+        <a-entity id="Speaker" obj-model="obj: ./assets/Speaker.obj" position="-86 12 8" rotation="0 -90 0" material="color:#ff8000"></a-entity>
+        <a-entity id="Led" obj-model="obj: ./assets/led.obj" position="-60 78 -20" rotation="0 0 0" material="color:#0080c0"></a-entity>
+        <a-entity id="partie-avant" obj-model="obj: ./assets/partie-avant.obj" position="-108 29 -19" rotation="-90 90 0" material="color:#ff0000"></a-entity>
+        <a-entity id="bas" obj-model="obj: ./assets/bas.obj" position="-60 -18 -19" rotation="0 90 0" material="side: double; color:#ff80c0"></a-entity>
       </a-entity>
+    </a-entity>
+  </a-entity>
+</a-scene>
 
-      <a-camera position="0 0 0"></a-camera>
+<script>
+AFRAME.registerComponent('look-at-camera',{
+  tick: function(){
+    const camera=document.querySelector('#camera');
+    if(camera) this.el.object3D.lookAt(camera.object3D.position);
+  }
+});
 
-    </a-scene>
-  </body>
+document.addEventListener('DOMContentLoaded',()=>{
+  const parent=document.querySelector('#enceinte-parent');
+  const enceinte=document.getElementById('enceinte');
+  const camera=document.querySelector('#camera');
+
+  const components=[
+    {id:'back',offset:{x:0,y:0,z:-200}},
+    {id:'Left',offset:{x:-180,y:60,z:0}},
+    {id:'Right',offset:{x:180,y:60,z:0}},
+    {id:'Batteries',offset:{x:120,y:-70,z:80}},
+    {id:'Open',offset:{x:-90,y:40,z:-130}},
+    {id:'Speaker',offset:{x:-80,y:-30,z:200}},
+    {id:'Led',offset:{x:0,y:180,z:0}},
+    {id:'partie-avant',offset:{x:80,y:30,z:240}},
+    {id:'bas',offset:{x:0,y:-130,z:0}}
+  ];
+
+  const originalData={};
+  const particlesPerPiece = {};
+  const smokeParticlesPerPiece = {};
+  const numParticles=25;
+  const numSmoke=10;
+
+  const particlesContainer=document.createElement('a-entity');
+  particlesContainer.setAttribute('id','particles-container');
+  enceinte.appendChild(particlesContainer);
+
+  const audio = new Audio('./assets/explosion.mp3');
+
+  function createParticles(){
+    const colors=['#ffffff','#ffaa00','#ff6600','#ff0000'];
+    components.forEach(comp=>{
+      particlesPerPiece[comp.id]=[];
+      smokeParticlesPerPiece[comp.id]=[];
+      for(let i=0;i<numParticles;i++){
+        const particle=document.createElement('a-sphere');
+        const color=colors[Math.floor(Math.random()*colors.length)];
+        const scale=Math.random()*0.15+0.05;
+        particle.setAttribute('radius', scale);
+        particle.setAttribute('material',`shader:standard; color:${color}; opacity:0; transparent:true; emissive:${color}`);
+        particle.setAttribute('visible',false);
+        particlesContainer.appendChild(particle);
+        particlesPerPiece[comp.id].push(particle);
+      }
+      for(let i=0;i<numSmoke;i++){
+        const smoke=document.createElement('a-sphere');
+        const scale=0.2 + Math.random()*0.3;
+        smoke.setAttribute('radius', scale);
+        smoke.setAttribute('material',`shader:standard; color:#888888; opacity:0.4; transparent:true;`);
+        smoke.setAttribute('visible',false);
+        particlesContainer.appendChild(smoke);
+        smokeParticlesPerPiece[comp.id].push(smoke);
+      }
+    });
+  }
+
+  function initComponents(){
+    components.forEach(comp=>{
+      const el=document.getElementById(comp.id);
+      if(el){
+        const pos=el.getAttribute('position');
+        const rot=el.getAttribute('rotation');
+        originalData[comp.id]={position:{x:pos.x,y:pos.y,z:pos.z},rotation:{x:rot.x,y:rot.y,z:rot.z}};
+      }
+    });
+  }
+
+  function explode(){
+    components.forEach(comp=>{
+      const el=document.getElementById(comp.id);
+      const orig = originalData[comp.id].position;
+      const origRot = originalData[comp.id].rotation;
+
+      const duration = 1600 + Math.random()*400;
+      const targetPos = {x:orig.x+comp.offset.x, y:orig.y+comp.offset.y, z:orig.z+comp.offset.z};
+      const targetRot = {x:origRot.x+(Math.random()-0.5)*60,
+                         y:origRot.y+(Math.random()-0.5)*60,
+                         z:origRot.z+(Math.random()-0.5)*60};
+      el.setAttribute('animation__pos',{property:'position',to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`,dur:duration,easing:'easeOutCubic'});
+      el.setAttribute('animation__rot',{property:'rotation',to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`,dur:duration,easing:'easeOutCubic'});
+
+      const sound = audio.cloneNode();
+      sound.volume = 0.3 + Math.random()*0.7;
+      sound.playbackRate = 0.8 + Math.random()*0.4;
+      sound.play();
+
+      emitParticlesForPiece(comp.id, orig, duration);
+      emitSmokeForPiece(comp.id, orig, duration);
+      flashPiece(el, duration);
+    });
+
+    shakeCamera();
+    setTimeout(reassemble, 2000);
+  }
+
+  function reassemble(){
+    components.forEach(comp=>{
+      const el=document.getElementById(comp.id);
+      const orig = originalData[comp.id].position;
+      const origRot = originalData[comp.id].rotation;
+
+      const duration = 1600 + Math.random()*400;
+      el.setAttribute('animation__return',{property:'position',to:`${orig.x} ${orig.y} ${orig.z}`,dur:duration,easing:'easeInOutCubic'});
+      el.setAttribute('animation__rot_return',{property:'rotation',to:`${origRot.x} ${origRot.y} ${origRot.z}`,dur:duration,easing:'easeInOutCubic'});
+    });
+
+    Object.values(particlesPerPiece).forEach(list=>{ list.forEach(p=>{ p.setAttribute('visible', false); p.setAttribute('material.opacity', 0); }); });
+    Object.values(smokeParticlesPerPiece).forEach(list=>{ list.forEach(p=>{ p.setAttribute('visible', false); p.setAttribute('material.opacity', 0.4); }); });
+
+    setTimeout(explode, 2000);
+  }
+
+  function emitParticlesForPiece(pieceId, origin, pieceDuration){
+    const particles=particlesPerPiece[pieceId];
+    particles.forEach((particle,i)=>{
+      setTimeout(()=>{
+        const angle=Math.random()*Math.PI*2;
+        const elevation=Math.random()*Math.PI-0.5;
+        const radius=2+Math.random()*5;
+        const targetX = origin.x + Math.cos(angle)*Math.cos(elevation)*radius;
+        const targetY = origin.y + Math.sin(elevation)*radius*0.7;
+        const targetZ = origin.z + Math.sin(angle)*Math.cos(elevation)*radius;
+
+        const speedVariation = pieceDuration*0.8 + Math.random()*pieceDuration*0.4;
+        const scaleVariation = 0.05 + Math.random()*0.15;
+        particle.setAttribute('radius', scaleVariation);
+
+        particle.setAttribute('visible', true);
+        particle.setAttribute('position', `${origin.x} ${origin.y} ${origin.z}`);
+        particle.setAttribute('animation__move',{property:'position',to:`${targetX} ${targetY} ${targetZ}`,dur:speedVariation,easing:'easeOutCubic'});
+        particle.setAttribute('animation__spin',{property:'rotation',to:`${Math.random()*360} ${Math.random()*360} ${Math.random()*360}`,dur:speedVariation,easing:'linear'});
+        particle.setAttribute('animation__fade',{property:'material.opacity',from:1,to:0,dur:speedVariation,delay:0,easing:'easeInQuad'});
+      }, i*3);
+    });
+  }
+
+  function emitSmokeForPiece(pieceId, origin, pieceDuration){
+    const smoke=smokeParticlesPerPiece[pieceId];
+    smoke.forEach((p,i)=>{
+      setTimeout(()=>{
+        const targetX = origin.x + (Math.random()-0.5)*2;
+        const targetY = origin.y + 2 + Math.random()*3;
+        const targetZ = origin.z + (Math.random()-0.5)*2;
+
+        const speedVariation = pieceDuration*1.2 + Math.random()*pieceDuration*0.5;
+        p.setAttribute('visible', true);
+        p.setAttribute('position', `${origin.x} ${origin.y} ${origin.z}`);
+        p.setAttribute('animation__move',{property:'position',to:`${targetX} ${targetY} ${targetZ}`,dur:speedVariation,easing:'easeOutCubic'});
+        p.setAttribute('animation__fade',{property:'material.opacity',from:0.4,to:0,dur:speedVariation,easing:'linear'});
+      }, i*50);
+    });
+  }
+
+  function flashPiece(el, duration){
+    const originalColor = el.getAttribute('material').color;
+    el.setAttribute('material','emissive:#ffffff; color:'+originalColor);
+    setTimeout(()=>{ el.setAttribute('material','color:'+originalColor+'; emissive:#000000'); }, duration/2);
+  }
+
+  function shakeCamera(){
+    const intensity = 0.02 + Math.random()*0.03;
+    const duration = 200 + Math.random()*100;
+    const startPos = camera.object3D.position.clone();
+    let elapsed = 0;
+    const interval = 16;
+    const shake = setInterval(()=>{
+      elapsed += interval;
+      const factor = (1 - elapsed/duration);
+      camera.object3D.position.set(
+        startPos.x + (Math.random()*2-1)*intensity*factor,
+        startPos.y + (Math.random()*2-1)*intensity*factor,
+        startPos.z + (Math.random()*2-1)*intensity*factor
+      );
+      if(elapsed >= duration){
+        clearInterval(shake);
+        camera.object3D.position.copy(startPos);
+      }
+    }, interval);
+  }
+
+  const targetEntity=document.querySelector('[mindar-image-target]');
+  targetEntity.addEventListener('targetFound',()=>{
+    parent.setAttribute('visible',true);
+    initComponents();
+    createParticles();
+    explode();
+  });
+
+  targetEntity.addEventListener('targetLost',()=>{
+    parent.setAttribute('visible',false);
+  });
+});
+</script>
+</body>
 </html>
