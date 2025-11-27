@@ -343,10 +343,15 @@
         init();
         setTimeout(() => explode(), 500);
         
-        // Faire disparaître après l'explosion complète
+        // Reassembler après l'explosion
+        setTimeout(() => {
+          reassemble();
+        }, 5500); // 500ms + 1800ms explosion + 3200ms pour voir les labels
+        
+        // Faire disparaître après le reassemblage
         setTimeout(() => {
           parent.setAttribute('visible', false);
-        }, 7000); // 500ms + 1800ms explosion + temps pour voir les labels
+        }, 9000);
       });
 
       targetEntity.addEventListener('targetLost', () => {
