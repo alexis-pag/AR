@@ -1,0 +1,174 @@
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+      body, html { margin: 0; overflow: hidden; }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      AFRAME.registerComponent("explosion-loop", {
+        init() {
+
+          const el = this.el;
+
+          const flash = el.querySelector("#flash");
+          const shockwave = el.querySelector("#shockwave");
+          const smoke = el.querySelector("#smoke");
+          const debris = el.querySelector("#debris");
+
+          const camera = document.querySelector("[camera]");
+
+          const loopExplosion = () => {
+
+            /* RESET ANIMATION */
+            flash.setAttribute("visible", false);
+            shockwave.setAttribute("visible", false);
+            smoke.setAttribute("visible", false);
+            debris.setAttribute("visible", false);
+
+            flash.setAttribute("scale", "0 0 0");
+            shockwave.setAttribute("scale", "0.1 0.1 0.1");
+            smoke.setAttribute("scale", "0.1 0.1 0.1");
+
+            /* CAMERA SHAKE */
+            camera.setAttribute("animation__shake", {
+              property: "position",
+              from: "0 0 0",
+              to: "0 0.02 0",
+              dir: "alternate",
+              dur: 80,
+              easing: "easeInOutQuad",
+              loop: 6
+            });
+
+            /* FLASH */
+            setTimeout(() => {
+              flash.setAttribute("visible", true);
+              flash.setAttribute("animation__flash", {
+                property: "scale",
+                from: "0 0 0",
+                to: "2.2 2.2 2.2",
+                dur: 120,
+                easing: "easeOutQuad"
+              });
+              flash.setAttribute("animation__fade", {
+                property: "material.opacity",
+                from: 1,
+                to: 0,
+                dur: 220,
+                easing: "easeOutQuad"
+              });
+            }, 50);
+
+            /* SHOCKWAVE AU SOL */
+            setTimeout(() => {
+              shockwave.setAttribute("visible", true);
+              shockwave.setAttribute("animation__expand", {
+                property: "scale",
+                from: "0.1 0.1 0.1",
+                to: "3.5 3.5 3.5",
+                dur: 350,
+                easing: "easeOutCubic"
+              });
+              shockwave.setAttribute("animation__fade", {
+                property: "material.opacity",
+                from: 0.8,
+                to: 0,
+                dur: 350
+              });
+            }, 120);
+
+            /* FUMÉE */
+            setTimeout(() => {
+              smoke.setAttribute("visible", true);
+              smoke.setAttribute("animation__grow", {
+                property: "scale",
+                from: "0.1 0.1 0.1",
+                to: "2 2 2",
+                dur: 1200,
+                easing: "easeOutQuad"
+              });
+              smoke.setAttribute("animation__fade", {
+                property: "material.opacity",
+                from: 0.8,
+                to: 0.1,
+                dur: 1500
+              });
+            }, 200);
+
+            /* DEBRIS */
+            setTimeout(() => {
+              debris.setAttribute("visible", true);
+              debris.setAttribute("animation__up", {
+                property: "position",
+                from: "0 0 0",
+                to: "0 0.6 -0.3",
+                dur: 400,
+                easing: "easeOutCubic"
+              });
+              debris.setAttribute("animation__fall", {
+                property: "position",
+                from: "0 0.6 -0.3",
+                to: "0 -0.1 -0.3",
+                dur: 600,
+                delay: 350,
+                easing: "easeInQuad"
+              });
+            }, 120);
+
+            /* RELANCE DE LA BOUCLE */
+            setTimeout(loopExplosion, 3000);
+          };
+
+          loopExplosion();
+        }
+      });
+    </script>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" embedded>
+
+      <a-assets>
+        <img id="flashTex" src="https://i.imgur.com/9a3M4QF.png">
+        <img id="smokeTex" src="https://i.imgur.com/yZ6kSqr.png">
+        <img id="shockTex" src="https://i.imgur.com/JmQkduF.png">
+      </a-assets>
+
+      <a-entity mindar-image-target="targetIndex: 0" explosion-loop>
+
+        <!-- FLASH -->
+        <a-plane id="flash" visible="false"
+                 material="src: #flashTex; transparent: true; opacity: 1"
+                 position="0 0 0" rotation="-90 0 0" scale="0 0 0">
+        </a-plane>
+
+        <!-- SHOCKWAVE -->
+        <a-ring id="shockwave" visible="false"
+                material="src: #shockTex; transparent: true; opacity: 0.8"
+                radius-inner="0.01" radius-outer="0.5"
+                rotation="-90 0 0" scale="0.1 0.1 0.1">
+        </a-ring>
+
+        <!-- FUMÉE -->
+        <a-plane id="smoke" visible="false"
+                 material="src: #smokeTex; transparent: true; opacity: 0.8"
+                 position="0 0 0" rotation="-90 0 0" scale="0.1 0.1 0.1">
+        </a-plane>
+
+        <!-- DEBRIS 3D -->
+        <a-sphere id="debris" visible="false"
+                  radius="0.06"
+                  color="#222"
+                  position="0 0 0">
+        </a-sphere>
+
+      </a-entity>
+
+      <a-camera position="0 0 0"></a-camera>
+
+    </a-scene>
+  </body>
+</html>
