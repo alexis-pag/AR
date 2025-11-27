@@ -121,16 +121,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
-  function explode(callback){
-    let completed = 0;
-    components.forEach(comp=>{
-      const el = document.getElementById(comp.id);
-      if(el){
-        el.removeAttribute('animation__pos');
-        el.removeAttribute('animation__rot');
+  // --- Version Promise / async pour boucle fluide ---
+  function explode(){
+    const promises = components.map(comp => {
+      return new Promise(resolve => {
+        const el = document.getElementById(comp.id);
         const orig = originalData[comp.id].position;
         const origRot = originalData[comp.id].rotation;
-        el.object3D.position.set(orig.x,orig.y,orig.z);
+        el.object3D.position.set(orig.x, orig.y, orig.z);
         el.object3D.rotation.set(THREE.MathUtils.degToRad(origRot.x),
                                  THREE.MathUtils.degToRad(origRot.y),
                                  THREE.MathUtils.degToRad(origRot.z));
@@ -138,51 +136,48 @@ document.addEventListener('DOMContentLoaded',()=>{
         const targetRot = {x:origRot.x+(Math.random()-0.5)*60,
                            y:origRot.y+(Math.random()-0.5)*60,
                            z:origRot.z+(Math.random()-0.5)*60};
+        el.setAttribute('animation__pos',{property:'position', to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`, dur:1800, easing:'easeOutCubic'});
+        el.setAttribute('animation__rot',{property:'rotation', to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`, dur:1800, easing:'easeOutCubic'});
 
-        el.setAttribute('animation__pos',{property:'position',to:`${targetPos.x} ${targetPos.y} ${targetPos.z}`,dur:1800,easing:'easeOutCubic'});
-        el.setAttribute('animation__rot',{property:'rotation',to:`${targetRot.x} ${targetRot.y} ${targetRot.z}`,dur:1800,easing:'easeOutCubic'});
-
-        el.addEventListener('animationcomplete', function onComplete(evt){
+        el.addEventListener('animationcomplete', function handler(evt){
           if(evt.detail.name === 'animation__pos'){
-            completed++;
-            el.removeEventListener('animationcomplete', onComplete);
-            if(completed === components.length && callback) callback();
+            el.removeEventListener('animationcomplete', handler);
+            resolve();
           }
         });
-      }
+      });
     });
+
     emitParticles();
+    return Promise.all(promises);
   }
 
-  function reassemble(callback){
-    let completed = 0;
-    components.forEach(comp=>{
-      const el = document.getElementById(comp.id);
-      if(el){
-        el.removeAttribute('animation__pos');
-        el.removeAttribute('animation__rot');
+  function reassemble(){
+    const promises = components.map(comp => {
+      return new Promise(resolve => {
+        const el = document.getElementById(comp.id);
         const orig = originalData[comp.id].position;
         const origRot = originalData[comp.id].rotation;
+        el.setAttribute('animation__return',{property:'position', to:`${orig.x} ${orig.y} ${orig.z}`, dur:1800, easing:'easeInOutCubic'});
+        el.setAttribute('animation__rot_return',{property:'rotation', to:`${origRot.x} ${origRot.y} ${origRot.z}`, dur:1800, easing:'easeInOutCubic'});
 
-        el.setAttribute('animation__return',{property:'position',to:`${orig.x} ${orig.y} ${orig.z}`,dur:1800,easing:'easeInOutCubic'});
-        el.setAttribute('animation__rot_return',{property:'rotation',to:`${origRot.x} ${origRot.y} ${origRot.z}`,dur:1800,easing:'easeInOutCubic'});
-
-        el.addEventListener('animationcomplete', function onComplete(evt){
+        el.addEventListener('animationcomplete', function handler(evt){
           if(evt.detail.name === 'animation__return'){
-            completed++;
-            el.removeEventListener('animationcomplete', onComplete);
-            if(completed === components.length && callback) callback();
+            el.removeEventListener('animationcomplete', handler);
+            resolve();
           }
         });
-      }
+      });
     });
+
+    return Promise.all(promises);
   }
 
-  function loop(){
-    if(!looping) return;
-    explode(()=>{
-      reassemble(loop); // se rappelle → boucle infinie
-    });
+  async function loop(){
+    while(looping){
+      await explode();
+      await reassemble();
+    }
   }
 
   const targetEntity=document.querySelector('[mindar-image-target]');
@@ -191,12 +186,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     initComponents();
     createParticles();
     looping = true;
-    loop(); // démarrage de la boucle infinie
+    loop(); // démarre la boucle infinie
   });
 
   targetEntity.addEventListener('targetLost',()=>{
     parent.setAttribute('visible',false);
-    looping = false; // stoppe la boucle
+    looping = false; // stoppe la boucle si le target disparaît
   });
 });
 </script>
