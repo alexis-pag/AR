@@ -15,7 +15,7 @@ a-scene { width:100%; height:100%; display:block; }
   <a-camera mindar-image-camera></a-camera>
   <a-entity mindar-image-target="targetIndex: 0">
     <a-entity id="enceinte-parent" position="0 0 0" visible="false">
-      <a-entity id="enceinte" scale="0.002 0.002 0.002">
+      <a-entity id="enceinte" scale="0.01 0.01 0.01">
         <a-entity id="back" obj-model="obj: ./assets/Back.obj" position="-20.15299 4.74877 -54.67917" rotation="0 90 0" material="color:#ffff80"></a-entity>
         <a-entity id="Left" obj-model="obj: ./assets/Left.obj" position="-31.10108 62.18591 -69.24553" rotation="0 0 90" material="color:#8080c0"></a-entity>
         <a-entity id="Right" obj-model="obj: ./assets/Right.obj" position="-89.76148 21.65531 21.74075" rotation="0 0 -90" material="color:#8000ff"></a-entity>
@@ -138,7 +138,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });
     emitParticles();
-    // Callback après durée de l'explosion
     if(callback) setTimeout(callback,1800);
   }
 
@@ -160,7 +159,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function loop(){
     if(!looping) return;
     explode(()=>{
-      reassemble(loop); // relance le cycle après reconstitution
+      reassemble(loop); // se rappelle elle-même → boucle infinie
     });
   }
 
@@ -170,12 +169,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     initComponents();
     createParticles();
     looping = true;
-    loop();
+    loop(); // démarre la boucle infinie
   });
 
   targetEntity.addEventListener('targetLost',()=>{
     parent.setAttribute('visible',false);
-    looping = false;
+    looping = false; // arrête la boucle si le target disparaît
   });
 });
 </script>
