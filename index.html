@@ -70,25 +70,29 @@
       const parent = document.querySelector('#enceinte-parent');
 
       const components = [
-        {id:'back', offset:{x:0,y:0,z:-20}},
-        {id:'Left', offset:{x:-15,y:10,z:0}},
-        {id:'Right', offset:{x:15,y:10,z:0}},
-        {id:'Batteries', offset:{x:10,y:-10,z:5}},
-        {id:'Open', offset:{x:-10,y:5,z:-10}},
-        {id:'Speaker', offset:{x:-15,y:-5,z:15}},
-        {id:'Led', offset:{x:0,y:15,z:0}},
-        {id:'partie-avant', offset:{x:10,y:5,z:15}},
-        {id:'bas', offset:{x:0,y:-15,z:0}}
+        {id:'back', offset:{x:0,y:0,z:-40}},
+        {id:'Left', offset:{x:-30,y:20,z:-10}},
+        {id:'Right', offset:{x:30,y:20,z:10}},
+        {id:'Batteries', offset:{x:25,y:-20,z:15}},
+        {id:'Open', offset:{x:-20,y:10,z:-25}},
+        {id:'Speaker', offset:{x:-35,y:-10,z:35}},
+        {id:'Led', offset:{x:0,y:35,z:5}},
+        {id:'partie-avant', offset:{x:30,y:15,z:30}},
+        {id:'bas', offset:{x:0,y:-30,z:-5}}
       ];
 
       const originalData = {};
 
-      // Stocker positions d'origine
+      // Stocker positions et rotations d'origine
       components.forEach(comp => {
         const el = document.getElementById(comp.id);
         if(el){
           const pos = el.getAttribute('position');
-          originalData[comp.id] = {x: pos.x, y: pos.y, z: pos.z};
+          const rot = el.getAttribute('rotation');
+          originalData[comp.id] = {
+            x: pos.x, y: pos.y, z: pos.z,
+            rx: rot.x, ry: rot.y, rz: rot.z
+          };
         }
       });
 
@@ -103,22 +107,41 @@
               z: originalData[comp.id].z + comp.offset.z
             };
 
+            // Animation d'explosion avec rotation
             el.setAttribute('animation__explode', {
               property: 'position',
               to: `${target.x} ${target.y} ${target.z}`,
-              dur: 1500,
-              easing: 'easeOutQuad',
-              delay: index * 50 // décalage léger pour fluidité
+              dur: 2000,
+              easing: 'easeOutElastic',
+              delay: index * 80
             });
 
+            // Rotation pendant l'explosion
+            el.setAttribute('animation__rotate', {
+              property: 'rotation',
+              to: `${Math.random() * 360} ${Math.random() * 360} ${Math.random() * 360}`,
+              dur: 2000,
+              easing: 'easeOutQuad',
+              delay: index * 80
+            });
+
+            // Retour en position avec rotation inverse
             setTimeout(() => {
               el.setAttribute('animation__return', {
                 property: 'position',
                 to: `${originalData[comp.id].x} ${originalData[comp.id].y} ${originalData[comp.id].z}`,
-                dur: 1500,
-                easing: 'easeInQuad'
+                dur: 2000,
+                easing: 'easeInOutQuad'
               });
-            }, 2000 + index * 50);
+
+              const originalRotation = el.getAttribute('rotation');
+              el.setAttribute('animation__rotateBack', {
+                property: 'rotation',
+                to: `${originalRotation.x} ${originalRotation.y} ${originalRotation.z}`,
+                dur: 2000,
+                easing: 'easeInOutQuad'
+              });
+            }, 3000 + index * 80);
           }
         });
       }
